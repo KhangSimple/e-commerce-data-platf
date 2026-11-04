@@ -10,6 +10,11 @@ class GeneratorConfig:
     start_date: str = "2025-01-01"
     end_date: str = "2025-01-31"
     seed: int = 42
+    duplicate_rate: float = 0.01
+    invalid_rate: float = 0.01
+    late_rate: float = 0.005
+    min_delay_seconds: int = 60
+    max_delay_seconds: int = 300
     output: Path = Path("data/synthetic/events/events.jsonl")
     products_csv: Path = Path("data/raw/products.csv")
     customers_csv: Path = Path("data/raw/customers.csv")

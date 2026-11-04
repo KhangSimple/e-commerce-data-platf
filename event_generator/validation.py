@@ -1,14 +1,24 @@
 from datetime import datetime
 
-ALLOWED_EVENTS = {"view_product", "add_to_cart", "remove_from_cart",
-                  "begin_checkout", "purchase"}
+ALLOWED_EVENTS = {
+    "view_product",
+    "add_to_cart",
+    "remove_from_cart",
+    "begin_checkout",
+    "purchase",
+}
+
 
 def validate_session(events):
     errors = []
+    warning = []
     if not events:
         return ["empty session"]
     session_ids = {e.session_id for e in events}
     users = {e.user_id for e in events}
+    event_ids = {e.event_id for e in events}
+    if len(set(event_ids)) != len(events):
+        warning.append("duplicate event_id within session")
     if len(session_ids) != 1:
         errors.append("session_id differs within session")
     if len(users) != 1:
@@ -25,4 +35,4 @@ def validate_session(events):
         purchase = next(e for e in events if e.event_type == "purchase")
         if not purchase.order_id or purchase.price is None:
             errors.append("purchase must have order_id and price")
-    return errors
+    return errors, warning

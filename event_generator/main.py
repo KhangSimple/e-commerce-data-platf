@@ -44,13 +44,15 @@ def run(config: GeneratorConfig):
                 )
             ):
                 session = generator.generate_session(user_id)
-                errors = validate_session(session)
+                errors, warning = validate_session(session)
                 if errors:
                     raise RuntimeError(f"Invalid session: {errors}")
                 for event in session:
                     f.write(json.dumps(event.to_dict(), ensure_ascii=False) + "\n")
                     counts[event.event_type] += 1
                     total += 1
+        if warning:
+            print("Warnings during validation:", set(warning))
     print(f"Wrote {total:,} events to {config.output}")
     print("Event counts:", dict(counts))
 
@@ -61,7 +63,13 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--start-date", default="2025-01-01")
     parser.add_argument("--end-date", default="2025-01-31")
+    parser.add_argument("--duplicate-rate", type=float, default=0.01)
+    parser.add_argument("--invalid-rate", type=float, default=0.01)
+    parser.add_argument("--late-rate", type=float, default=0.005)
+    parser.add_argument("--min-delay-seconds", type=int, default=60)
+    parser.add_argument("--max-delay-seconds", type=int, default=300)
     parser.add_argument("--products-csv", default="data/raw/products.csv")
+    parser.add_argument("--customers-csv", default="data/raw/customers.csv")
     parser.add_argument("--output", default="data/synthetic/events/events.jsonl")
     args = parser.parse_args()
     config = GeneratorConfig(
@@ -69,7 +77,13 @@ def main():
         seed=args.seed,
         start_date=args.start_date,
         end_date=args.end_date,
+        duplicate_rate=args.duplicate_rate,
+        invalid_rate=args.invalid_rate,
+        late_rate=args.late_rate,
+        min_delay_seconds=args.min_delay_seconds,
+        max_delay_seconds=args.max_delay_seconds,
         products_csv=Path(args.products_csv),
+        customers_csv=Path(args.customers_csv),
         output=Path(args.output),
     )
     run(config)
