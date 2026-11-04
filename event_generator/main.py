@@ -15,10 +15,19 @@ def load_products(path: Path):
         return [row["product_id"] for row in reader if row.get("product_id")]
 
 
+def load_customers(path: Path):
+    with path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        # Olist customer identifier column is customer_id.
+        return [row["customer_id"] for row in reader if row.get("customer_id")]
+
+
 def run(config: GeneratorConfig):
     products = load_products(config.products_csv)
+    customers = load_customers(config.customers_csv)
     generator = EventGenerator(
-        products,
+        users=customers,
+        products=products,
         seed=config.seed,
         start_date=config.start_date,
         end_date=config.end_date,
@@ -27,8 +36,8 @@ def run(config: GeneratorConfig):
     counts = Counter()
     total = 0
     with config.output.open("w", encoding="utf-8") as f:
-        for i in range(config.users):
-            user_id = f"synthetic_user_{i:06d}"
+        for customer_id in generator.rng.choices(customers, k=config.users):
+            user_id = customer_id
             for _ in range(
                 generator.rng.randint(
                     config.sessions_per_user_min, config.sessions_per_user_max

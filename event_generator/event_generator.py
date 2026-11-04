@@ -7,9 +7,10 @@ from .user_simulator import UserSimulator
 DEVICES = ["desktop", "mobile", "tablet"]
 
 class EventGenerator:
-    def __init__(self, products, *, seed=42, start_date="2025-01-01", end_date="2025-01-31"):
+    def __init__(self, users, products, *, seed=42, start_date="2025-01-01", end_date="2025-01-31"):
         if not products:
             raise ValueError("products must not be empty")
+        self.users = list(users)
         self.products = list(products)
         self.rng = random.Random(seed)
         self.simulator = UserSimulator(self.rng)
