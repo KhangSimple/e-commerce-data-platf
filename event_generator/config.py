@@ -18,3 +18,8 @@ class GeneratorConfig:
     output: Path = Path("data/synthetic/events/events.jsonl")
     products_csv: Path = Path("data/raw/products.csv")
     customers_csv: Path = Path("data/raw/customers.csv")
+
+    mode: str = "file"
+    project_id: str = "klostctrl-portfolio"
+    topic: str = "ecommerce-events"
+    eps: int = 1000

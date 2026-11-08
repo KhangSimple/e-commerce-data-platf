@@ -5,6 +5,7 @@ from pathlib import Path
 from collections import Counter
 from .config import GeneratorConfig
 from .event_generator import EventGenerator
+from .publisher import PubSubPublisher
 from .validation import validate_session
 
 
@@ -32,6 +33,11 @@ def run(config: GeneratorConfig):
         start_date=config.start_date,
         end_date=config.end_date,
     )
+    publisher = (
+        PubSubPublisher(config.project_id, config.topic)
+        if config.mode == "pubsub"
+        else None
+    )
     config.output.parent.mkdir(parents=True, exist_ok=True)
     counts = Counter()
     total = 0
@@ -49,6 +55,9 @@ def run(config: GeneratorConfig):
                     raise RuntimeError(f"Invalid session: {errors}")
                 for event in session:
                     f.write(json.dumps(event.to_dict(), ensure_ascii=False) + "\n")
+                    if config.mode == "pubsub":
+                        publisher.publish(event.to_dict())
+
                     counts[event.event_type] += 1
                     total += 1
         if warning:
@@ -71,6 +80,12 @@ def main():
     parser.add_argument("--products-csv", default="data/raw/products.csv")
     parser.add_argument("--customers-csv", default="data/raw/customers.csv")
     parser.add_argument("--output", default="data/synthetic/events/events.jsonl")
+
+    parser.add_argument("--mode", default="file")
+    parser.add_argument("--project-id", default="klostctrl-portfolio")
+    parser.add_argument("--topic", default="ecommerce-events")
+    parser.add_argument("--eps", type=int, default=1000)
+
     args = parser.parse_args()
     config = GeneratorConfig(
         users=args.users,
@@ -85,6 +100,10 @@ def main():
         products_csv=Path(args.products_csv),
         customers_csv=Path(args.customers_csv),
         output=Path(args.output),
+        mode=args.mode,
+        project_id=args.project_id,
+        topic=args.topic,
+        eps=args.eps,
     )
     run(config)
 
